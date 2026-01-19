@@ -17,14 +17,13 @@ dotnet build Archon.slnx
 
 ### Running Tests
 ```bash
-# Build first, then run from output directory
+# Build first, then run using vstest
 cd src
 dotnet build Archon.slnx -c Release
-cd ArchonAnalysers.Tests.Unit/bin/Release/net10.0
-dotnet ArchonAnalysers.Tests.Unit.dll
+dotnet vstest ArchonAnalysers.Tests.Unit/bin/Release/net10.0/ArchonAnalysers.Tests.Unit.dll
 ```
 
-Note: The test project uses xunit.v3, not TUnit as previously documented.
+Note: The test project uses xunit 2.x with VSTest adapter. Use `dotnet vstest` rather than `dotnet test` due to the global.json test runner configuration.
 
 ### Packaging
 ```bash
@@ -38,10 +37,13 @@ dotnet pack ./ArchonAnalysers/ArchonAnalysers.csproj -o ./artifacts
 
 ArchonAnalysers is a **Roslyn DiagnosticAnalyzer** project targeting .NET Standard 2.0 for broad compatibility. Key architectural points:
 
-- **Analyser Registration**: Analysers use `RegisterSymbolAction` with `SymbolKind.NamedType` to analyse type declarations during compilation
+- **Analyser Registration**:
+  - ARCHON001/002 use `RegisterSymbolAction` with `SymbolKind.NamedType` to analyse type declarations
+  - ARCHON003/004 use `RegisterCompilationAction` to analyse assembly-level concerns
 - **Namespace Pattern Matching**: Uses regex to match namespace patterns (e.g., `*.Internal*` for ARCHON001)
 - **Masking Logic**: ARCHON001 implements recursive masking - nested types are exempt if their containing type already restricts visibility
 - **Scope Filtering**: ARCHON002 only analyses top-level types, exempting nested types from public API requirements
+- **MSBuild Integration**: ARCHON004 uses MSBuild targets to expose build properties via `CompilerVisibleProperty`
 
 ### Analyser Implementation Pattern
 
@@ -56,6 +58,7 @@ Both analysers follow this structure:
 - The project has `<IncludeBuildOutput>false</IncludeBuildOutput>` because analyser DLLs must be placed in `analyzers/dotnet/cs` path within the NuGet package
 - Package includes the README.md file
 - Uses `<DevelopmentDependency>true</DevelopmentDependency>` since it's a build-time tool
+- Includes MSBuild targets in `build/` and `buildTransitive/` folders for exposing build properties to analysers (used by ARCHON004)
 
 ### Testing Architecture
 
@@ -77,16 +80,35 @@ Both analysers follow this structure:
 - **Severity**: Warning
 - **Key Implementation**: Only checks top-level types (no nesting logic needed)
 
+### ARCHON003: Forbidden References
+- **File**: `src/ArchonAnalysers/Analyzers/ARCHON003/ForbiddenReferencesAnalyser.cs`
+- **Pattern**: Prevents assemblies from referencing other assemblies based on configurable rules
+- **Severity**: Error
+- **Key Implementation**: Uses `RegisterCompilationAction` to analyse all assembly references; configured via `.editorconfig` with `archon_003.forbidden_references` key using directional rules (e.g., `ProjectA->ProjectB`)
+
+### ARCHON004: Packable Project Reference
+- **File**: `src/ArchonAnalysers/Analyzers/ARCHON004/PackableProjectReferenceAnalyser.cs`
+- **Pattern**: Packable NuGet projects should not reference other packable projects via `ProjectReference`
+- **Severity**: Error
+- **Key Implementation**: Uses MSBuild targets (`build/ArchonAnalysers.targets`) to expose `IsPackable` property and project reference packability map to the analyser via `CompilerVisibleProperty`. Uses `RegisterCompilationAction` to check references at build time.
+
 ## Configuration
 
-Both analysers currently use hardcoded namespace slugs (`"Internal"` and `"Public"`). There are TODO comments in the code noting that these should eventually come from configuration files.
+ARCHON001 and ARCHON002 use configurable namespace slugs (`"Internal"` and `"Public"` by default).
 
-Users can configure severity levels in `.editorconfig`:
+Users can configure severity levels and rules in `.editorconfig`:
 ```editorconfig
 [*.cs]
 dotnet_diagnostic.ARCHON001.severity = error
 dotnet_diagnostic.ARCHON002.severity = warning
+dotnet_diagnostic.ARCHON003.severity = error
+dotnet_diagnostic.ARCHON004.severity = error
+
+# ARCHON003: Define forbidden reference rules (source->target format)
+archon_003.forbidden_references = WebApp->Domain, Contracts->Infrastructure
 ```
+
+ARCHON004 requires no additional configuration - it automatically detects packable projects via MSBuild properties.
 
 ## Technical Constraints
 

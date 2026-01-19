@@ -1,0 +1,45 @@
+<Project>
+  <!-- Expose current project's IsPackable to the analyser -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="IsPackable" />
+  </ItemGroup>
+
+  <!-- Target to collect ProjectReference packability info -->
+  <Target Name="_ArchonCollectProjectReferencePackability"
+          BeforeTargets="CoreCompile"
+          DependsOnTargets="ResolveProjectReferences"
+          Condition="'$(IsPackable)' == 'true'">
+
+    <!-- Evaluate each ProjectReference to get its IsPackable status -->
+    <MSBuild Projects="@(ProjectReference)"
+             Targets="_ArchonReportPackability"
+             BuildInParallel="false"
+             SkipNonexistentProjects="true">
+      <Output TaskParameter="TargetOutputs" ItemName="_ArchonPackableRefs" />
+    </MSBuild>
+
+    <!-- Build pipe-delimited map: "AssemblyName|IsPackable,..." -->
+    <PropertyGroup>
+      <_ArchonProjectRefPackabilityMap>@(_ArchonPackableRefs->'%(AssemblyName)|%(IsPackableValue)', ',')</_ArchonProjectRefPackabilityMap>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Make the map visible to the analyser -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="_ArchonProjectRefPackabilityMap" />
+  </ItemGroup>
+
+  <!-- Target invoked on referenced projects to report their packability -->
+  <Target Name="_ArchonReportPackability" Returns="@(_ArchonPackabilityResult)">
+    <PropertyGroup>
+      <_IsPackableResolved Condition="'$(IsPackable)' == ''">false</_IsPackableResolved>
+      <_IsPackableResolved Condition="'$(IsPackable)' != ''">$(IsPackable)</_IsPackableResolved>
+    </PropertyGroup>
+    <ItemGroup>
+      <_ArchonPackabilityResult Include="$(MSBuildProjectName)">
+        <AssemblyName>$(AssemblyName)</AssemblyName>
+        <IsPackableValue>$(_IsPackableResolved)</IsPackableValue>
+      </_ArchonPackabilityResult>
+    </ItemGroup>
+  </Target>
+</Project>
