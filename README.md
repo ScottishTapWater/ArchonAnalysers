@@ -59,6 +59,16 @@ ARCHON003 provides a code fix that automatically removes forbidden `<ProjectRefe
 
 **To use:** Right-click the diagnostic in the Error List and select "Remove project reference to [AssemblyName]"
 
+### ARCHON004: Forbidden Namespace References
+
+Prevents code declared in configured source namespaces from referring to types or imports in configured target namespaces. This provides finer-grained dependency boundaries within an assembly as well as across assemblies.
+
+- **Severity**: Error
+- **Configuration**: `archon_004.forbidden_namespace_references` (directional rules: `Source->Target`)
+- **Matching**: Case-sensitive, on complete namespace segments
+- **Scope**: All declared type kinds, nested types, generated code, and referenced assemblies
+- **Code fix**: None; removing an architectural dependency requires design judgment
+
 ## Usage
 
 Once installed, the analysers will automatically run during compilation and highlight violations in your IDE.
@@ -134,6 +144,29 @@ archon_003.forbidden_references = Source->Target, AnotherSource->AnotherTarget
 - Empty or missing configuration means no restrictions
 - Rules must use the `Source->Target` format
 
+#### ARCHON004: Forbidden Namespace References
+
+Configure one or more directional namespace rules:
+
+```editorconfig
+[*.cs]
+archon_004.forbidden_namespace_references = MyApp.Domain->MyApp.Infrastructure, MyApp.Contracts->MyApp.Application
+```
+
+Each configured namespace includes itself and all child namespaces on both sides of the rule. For example, `MyApp.Domain` includes `MyApp.Domain.Services`, and `MyApp.Infrastructure` includes `MyApp.Infrastructure.Data`. Matching uses exact namespace-segment boundaries, so `MyApp.DomainModels` is not included, and matching is case-sensitive.
+
+ARCHON004 checks explicit and inferred semantic dependencies, including:
+
+- Fields, properties, events, parameters, return values, locals, tuples, arrays, nullable types, and constructed generic types
+- Object construction, method calls, extension methods, and instance or static member access
+- Base types, implemented interfaces, generic constraints, attributes, casts, patterns, `typeof`, and `nameof`
+- `var`, target-typed construction, aliases, and fully qualified references
+- Namespace, alias, `using static`, file-level, and `global using` imports, including unused imports
+
+Compilation-unit imports are checked against the declared types in that file. Global imports are checked against applicable declared types throughout the compilation. Namespace-scoped imports use their containing namespace as the source scope.
+
+Missing or empty configuration means no namespace restrictions. Whitespace around rules is ignored, malformed entries are skipped, and multiple rules are comma-separated. Unresolved symbols are ignored so incomplete source does not produce speculative ARCHON004 diagnostics.
+
 ### Severity Configuration
 
 Configure severity levels in your `.editorconfig`:
@@ -148,6 +181,9 @@ dotnet_diagnostic.ARCHON002.severity = warning
 
 # Enforce forbidden assembly references (default: error)
 dotnet_diagnostic.ARCHON003.severity = error
+
+# Enforce forbidden namespace references (default: error)
+dotnet_diagnostic.ARCHON004.severity = error
 ```
 
 ### Example
@@ -174,6 +210,22 @@ namespace MyApp.Public
 }
 ```
 
+#### Forbidden Namespace References (ARCHON004)
+
+With `MyApp.Domain->MyApp.Infrastructure` configured:
+
+```csharp
+namespace MyApp.Domain.Services;
+
+// ❌ ARCHON004: MyApp.Domain.Services cannot reference a type in
+// MyApp.Infrastructure or any of its child namespaces.
+public sealed class OrderService(MyApp.Infrastructure.Data.OrderStore store)
+{
+    // Inferred references are checked too.
+    public object Load() => MyApp.Infrastructure.Data.Repository.Load();
+}
+```
+
 ## Development
 
 ### Prerequisites
@@ -193,7 +245,7 @@ dotnet build Archon.slnx
 
 ```bash
 cd src/ArchonAnalysers.Tests.Unit/bin/Release/net10.0
-dotnet ArchonAnalysers.Tests.Unit.dll
+dotnet vstest ArchonAnalysers.Tests.Unit.dll
 ```
 
 ### Local CI/CD Testing

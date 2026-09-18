@@ -21,10 +21,12 @@ dotnet build Archon.slnx
 cd src
 dotnet build Archon.slnx -c Release
 cd ArchonAnalysers.Tests.Unit/bin/Release/net10.0
-dotnet ArchonAnalysers.Tests.Unit.dll
+dotnet vstest ArchonAnalysers.Tests.Unit.dll
 ```
 
-Note: The test project uses xunit.v3, not TUnit as previously documented.
+Note: The test project currently uses xUnit v2 packages. Invoking the test DLL
+directly exits without running or reporting the suite; use `dotnet vstest` and
+verify the discovered/executed test count.
 
 ### Packaging
 ```bash
@@ -93,4 +95,4 @@ dotnet_diagnostic.ARCHON002.severity = warning
 - **Target Framework**: .NET Standard 2.0 (analyser), .NET 10.0 (tests)
 - **Solution Format**: Uses `.slnx` (XML-based) instead of traditional `.sln`
 - **Roslyn Version**: Microsoft.CodeAnalysis.CSharp 4.11.0
-- **Test Runner**: Tests are run directly via `dotnet <dll>`, not `dotnet test`
+- **Test Runner**: Tests are run via `dotnet vstest <dll>`
