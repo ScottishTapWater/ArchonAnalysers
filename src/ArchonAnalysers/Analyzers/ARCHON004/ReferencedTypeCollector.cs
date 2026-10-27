@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace ArchonAnalysers.Analyzers.ARCHON004;
+namespace ArchonAnalysers.Analysers.ARCHON004;
 
 internal static class ReferencedTypeCollector
 {

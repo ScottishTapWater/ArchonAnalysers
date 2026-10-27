@@ -3,7 +3,7 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ArchonAnalysers.Analyzers.ARCHON001;
+using ArchonAnalysers.Analysers.ARCHON001;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;

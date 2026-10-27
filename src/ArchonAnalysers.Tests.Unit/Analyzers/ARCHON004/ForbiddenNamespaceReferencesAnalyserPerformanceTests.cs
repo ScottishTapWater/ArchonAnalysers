@@ -1,13 +1,14 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text;
-using ArchonAnalysers.Analyzers.ARCHON004;
+using ArchonAnalysers.Analysers.ARCHON004;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
 using Xunit;
 
-namespace ArchonAnalysers.Tests.Unit.Analyzers.ARCHON004;
+namespace ArchonAnalysers.Tests.Unit.Analysers.ARCHON004;
 
 public class ForbiddenNamespaceReferencesAnalyserPerformanceTests
 {
@@ -29,8 +30,9 @@ public class ForbiddenNamespaceReferencesAnalyserPerformanceTests
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
         AnalyzerOptions options = new(
-            ImmutableArray<AdditionalText>.Empty,
-            new TestConfigOptionsProvider("Source->Target"));
+            ImmutableArray.Create<AdditionalText>(new TestSettingsFile(
+                "archon_004.forbidden_namespace_references = Source->Target")),
+            new TestOptionsProvider());
         CompilationWithAnalyzers compilationWithAnalyzers = compilation.WithAnalyzers(
             [new ForbiddenNamespaceReferencesAnalyser()],
             options);
@@ -43,33 +45,31 @@ public class ForbiddenNamespaceReferencesAnalyserPerformanceTests
         Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(15), $"Analyzer took {stopwatch.Elapsed}.");
     }
 
-    private sealed class TestConfigOptionsProvider : AnalyzerConfigOptionsProvider
+    private sealed class TestSettingsFile : AdditionalText
     {
-        private readonly AnalyzerConfigOptions _options;
+        private readonly SourceText _text;
 
-        public TestConfigOptionsProvider(string rules) => _options = new TestConfigOptions(rules);
+        public TestSettingsFile(string contents) => _text = SourceText.From(contents);
 
-        public override AnalyzerConfigOptions GlobalOptions => _options;
-        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => _options;
-        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => _options;
+        public override string Path => "/.archonanalysers";
+        public override SourceText GetText(CancellationToken cancellationToken = default) => _text;
     }
 
-    private sealed class TestConfigOptions : AnalyzerConfigOptions
+    private sealed class TestOptionsProvider : AnalyzerConfigOptionsProvider
     {
-        private readonly string _rules;
+        private static readonly AnalyzerConfigOptions SettingsOptions = new TestSettingsOptions();
 
-        public TestConfigOptions(string rules) => _rules = rules;
+        public override AnalyzerConfigOptions GlobalOptions => SettingsOptions;
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => SettingsOptions;
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => SettingsOptions;
+    }
 
+    private sealed class TestSettingsOptions : AnalyzerConfigOptions
+    {
         public override bool TryGetValue(string key, out string value)
         {
-            if (key == ForbiddenNamespaceReferencesAnalyser.EditorConfigKey)
-            {
-                value = _rules;
-                return true;
-            }
-
-            value = string.Empty;
-            return false;
+            value = key == "build_metadata.AdditionalFiles.ArchonSettings" ? "true" : string.Empty;
+            return value.Length > 0;
         }
     }
 }

@@ -57,6 +57,9 @@
 
     <!-- Package analyzer assemblies -->
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <!-- Pass the consuming project's settings file to the analysers -->
+    <None Include="build/ArchonAnalysers.targets" Pack="true" PackagePath="build/ArchonAnalysers.targets" Visible="false" />
   </ItemGroup>
 
   <!-- Custom Target: Include FixProviders DLL in NuGet Package -->

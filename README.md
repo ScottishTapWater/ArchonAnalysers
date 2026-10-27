@@ -44,7 +44,7 @@ Prevents specified projects from referencing forbidden assemblies at compile tim
 - **Severity**: Error
 - **Configuration**: `archon_003.forbidden_references` (directional rules: `Source->Target`)
 - **Matching**: Simple assembly name, case-insensitive, .dll extension optional
-- **Scope**: Global configuration in single EditorConfig
+- **Scope**: Project-wide configuration in `.archonanalysers`
 
 #### Code Fix
 
@@ -75,18 +75,26 @@ Once installed, the analysers will automatically run during compilation and high
 
 ## Configuration
 
+Put Archon rule settings in a `.archonanalysers` file and name it in each consuming project:
+
+```xml
+<PropertyGroup>
+  <ArchonSettingsFile>../.archonanalysers</ArchonSettingsFile>
+</PropertyGroup>
+```
+
+The path is relative to the project directory and can point to a file shared by several projects. An unset property uses the defaults described below. A configured path that does not exist fails the build. The file uses `key = value` lines, with optional blank lines and `#` comments; it has no EditorConfig sections. Unknown keys, duplicate keys and malformed lines are errors.
+
+The four `archon_00x.*` settings are no longer read from `.editorconfig`. If one remains there, Archon reports a migration error, even when a settings file is configured. Move those settings to `.archonanalysers`; standard `dotnet_diagnostic.ARCHON00x.severity` settings remain in `.editorconfig`.
+
 ### Customising Namespace Patterns
 
-Both analysers support customising which namespace patterns trigger the rules via `.editorconfig`:
+Both analysers support customising which namespace patterns trigger the rules in `.archonanalysers`:
 
 #### ARCHON001: Internal Namespace Slugs
 
-```editorconfig
-[*.cs]
-# Single namespace slug (default: Internal)
-archon_001.internal_namespace_slugs = Internal
-
-# Multiple namespace slugs
+```ini
+# Multiple namespace slugs (default: Internal when omitted)
 archon_001.internal_namespace_slugs = Internal, Private, Hidden, Impl
 ```
 
@@ -94,12 +102,8 @@ Types in namespaces matching `*.Internal.*`, `*.Private.*`, `*.Hidden.*`, or `*.
 
 #### ARCHON002: Public Namespace Slugs
 
-```editorconfig
-[*.cs]
-# Single namespace slug (default: Public)
-archon_002.public_namespace_slugs = Public
-
-# Multiple namespace slugs
+```ini
+# Multiple namespace slugs (default: Public when omitted)
 archon_002.public_namespace_slugs = Public, Api, Exposed, Contract
 ```
 
@@ -113,11 +117,9 @@ Top-level types in namespaces matching `*.Public.*`, `*.Api.*`, `*.Exposed.*`, o
 
 #### ARCHON003: Forbidden Assembly References
 
-Configure directional rules in a **single global EditorConfig** file:
+Configure directional rules in `.archonanalysers`:
 
-```editorconfig
-# Single global .editorconfig at solution root
-[*.cs]
+```ini
 archon_003.forbidden_references = Contracts->Domain, Contracts->Application, Domain->Application
 ```
 
@@ -132,7 +134,7 @@ This enforces:
 ##### Syntax
 
 **Directional format:**
-```editorconfig
+```ini
 archon_003.forbidden_references = Source->Target, AnotherSource->AnotherTarget
 ```
 
@@ -148,8 +150,7 @@ archon_003.forbidden_references = Source->Target, AnotherSource->AnotherTarget
 
 Configure one or more directional namespace rules:
 
-```editorconfig
-[*.cs]
+```ini
 archon_004.forbidden_namespace_references = MyApp.Domain->MyApp.Infrastructure, MyApp.Contracts->MyApp.Application
 ```
 

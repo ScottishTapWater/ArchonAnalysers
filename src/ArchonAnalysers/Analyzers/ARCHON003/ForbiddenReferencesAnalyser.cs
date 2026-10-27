@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace ArchonAnalysers.Analyzers.ARCHON003;
+namespace ArchonAnalysers.Analysers.ARCHON003;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class ForbiddenReferencesAnalyser : DiagnosticAnalyzer
@@ -27,7 +27,7 @@ public class ForbiddenReferencesAnalyser : DiagnosticAnalyzer
     private static readonly LocalizableString MessageFormat = "Assembly '{0}' cannot reference '{1}'. This reference is forbidden by architectural rules.";
 
     private static readonly LocalizableString Description =
-        "This rule validates that projects do not reference assemblies that are forbidden by architectural constraints defined in EditorConfig. This enforces clean architecture and dependency inversion principles at compile time.";
+        "This rule validates that projects do not reference assemblies that are forbidden by architectural constraints defined in the Archon settings file. This enforces clean architecture and dependency inversion principles at compile time.";
 
     private static readonly DiagnosticDescriptor Rule = new(
         DiagnosticId,
@@ -41,7 +41,7 @@ public class ForbiddenReferencesAnalyser : DiagnosticAnalyzer
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Rule];
 
-    private const string EditorConfigKey = "archon_003.forbidden_references";
+    private const string SettingsKey = "archon_003.forbidden_references";
     private static readonly Regex DirectionalRulePattern = new(@"^\s*(?<source>.+?)\s*->\s*(?<target>.+?)\s*$", RegexOptions.Compiled);
 
     public override void Initialize(AnalysisContext context)
@@ -54,7 +54,8 @@ public class ForbiddenReferencesAnalyser : DiagnosticAnalyzer
 
     private static void AnalyzeCompilation(CompilationAnalysisContext context)
     {
-        ForbiddenRule[] allRules = GetForbiddenRules(context);
+        ArchonSettings settings = ArchonSettings.Read(context.Options, context.CancellationToken);
+        ForbiddenRule[] allRules = GetForbiddenRules(settings);
         if (allRules.Length == 0)
         {
             return;
@@ -94,18 +95,10 @@ public class ForbiddenReferencesAnalyser : DiagnosticAnalyzer
         }
     }
 
-    private static ForbiddenRule[] GetForbiddenRules(CompilationAnalysisContext context)
+    private static ForbiddenRule[] GetForbiddenRules(ArchonSettings settings)
     {
-        // Get any syntax tree (configuration is per-project, not per-file)
-        SyntaxTree? syntaxTree = context.Compilation.SyntaxTrees.FirstOrDefault();
-        if (syntaxTree == null)
-        {
-            return [];
-        }
-
-        AnalyzerConfigOptions options = context.Options.AnalyzerConfigOptionsProvider.GetOptions(syntaxTree);
-
-        if (!options.TryGetValue(EditorConfigKey, out string? configValue) || string.IsNullOrWhiteSpace(configValue))
+        string configValue = settings.GetValue(SettingsKey) ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(configValue))
         {
             return [];
         }

@@ -1,9 +1,9 @@
-using ArchonAnalysers.Analyzers.ARCHON001;
+using ArchonAnalysers.Analysers.ARCHON001;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace ArchonAnalysers.Tests.Unit.Analyzers.ARCHON001;
+namespace ArchonAnalysers.Tests.Unit.Analysers.ARCHON001;
 
 public class InternalsAreInternalAnalyserTests
 {
