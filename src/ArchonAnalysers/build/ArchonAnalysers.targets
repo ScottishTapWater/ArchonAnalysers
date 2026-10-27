@@ -1,6 +1,6 @@
 <Project>
   <ItemGroup Condition="'$(ArchonSettingsFile)' != ''">
-    <AdditionalFiles Include="$(ArchonSettingsFile)" ArchonSettings="true" Condition="Exists('$(ArchonSettingsFile)')" />
+    <AdditionalFiles Include="$(ArchonSettingsFile)" ArchonSettings="true" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchonSettings" />
   </ItemGroup>
 
