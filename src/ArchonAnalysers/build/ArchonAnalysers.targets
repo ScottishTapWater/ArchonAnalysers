@@ -1,0 +1,11 @@
+<Project>
+  <ItemGroup Condition="'$(ArchonSettingsFile)' != ''">
+    <AdditionalFiles Include="$(ArchonSettingsFile)" ArchonSettings="true" Condition="Exists('$(ArchonSettingsFile)')" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchonSettings" />
+  </ItemGroup>
+
+  <Target Name="ValidateArchonSettingsFile" BeforeTargets="CoreCompile" Condition="'$(ArchonSettingsFile)' != ''">
+    <Error Condition="!Exists('$(ArchonSettingsFile)')"
+           Text="ArchonSettingsFile '$(ArchonSettingsFile)' does not exist." />
+  </Target>
+</Project>

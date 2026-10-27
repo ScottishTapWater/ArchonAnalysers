@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace ArchonAnalysers.Analyzers.ARCHON002;
+namespace ArchonAnalysers.Analysers.ARCHON002;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class PublicsArePublicAnalyser : DiagnosticAnalyzer
@@ -22,7 +22,7 @@ public class PublicsArePublicAnalyser : DiagnosticAnalyzer
 
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [Rule];
 
-	private const string EditorConfigKey = "archon_002.public_namespace_slugs";
+	private const string SettingsKey = "archon_002.public_namespace_slugs";
 	private const string DefaultNamespaceSlugs = "Public";
 
 	public override void Initialize(AnalysisContext context)
@@ -30,12 +30,16 @@ public class PublicsArePublicAnalyser : DiagnosticAnalyzer
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
 		context.EnableConcurrentExecution();
 
-		context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.NamedType);
+		context.RegisterCompilationStartAction(startContext =>
+		{
+			ArchonSettings settings = ArchonSettings.Read(startContext.Options, startContext.CancellationToken);
+			startContext.RegisterSymbolAction(symbolContext => AnalyzeSymbol(symbolContext, settings), SymbolKind.NamedType);
+		});
 	}
 
-	private void AnalyzeSymbol(SymbolAnalysisContext context)
+	private void AnalyzeSymbol(SymbolAnalysisContext context, ArchonSettings settings)
 	{
-		string[] slugs = GetNamespaceSlugs(context);
+		string[] slugs = GetNamespaceSlugs(settings);
 		string pattern = BuildNamespacePattern(slugs);
 
 		INamespaceSymbol? symbolNamespace = context.Symbol.ContainingNamespace;
@@ -63,17 +67,10 @@ public class PublicsArePublicAnalyser : DiagnosticAnalyzer
 		CreateDiagnosticForProblematicSymbol(symbol, context);
 	}
 
-	private static string[] GetNamespaceSlugs(SymbolAnalysisContext context)
+	private static string[] GetNamespaceSlugs(ArchonSettings settings)
 	{
-		SyntaxTree? syntaxTree = context.Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree;
-		if (syntaxTree == null)
-		{
-			return DefaultNamespaceSlugs.Split(',');
-		}
-
-		AnalyzerConfigOptions options = context.Options.AnalyzerConfigOptionsProvider.GetOptions(syntaxTree);
-
-		if (options.TryGetValue(EditorConfigKey, out string? configValue) && !string.IsNullOrWhiteSpace(configValue))
+		string configValue = settings.GetValue(SettingsKey) ?? string.Empty;
+		if (!string.IsNullOrWhiteSpace(configValue))
 		{
 			return configValue
 				.Split(',')

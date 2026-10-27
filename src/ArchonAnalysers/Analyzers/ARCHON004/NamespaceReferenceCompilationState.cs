@@ -1,31 +1,21 @@
-using System.Collections.Concurrent;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace ArchonAnalysers.Analyzers.ARCHON004;
+namespace ArchonAnalysers.Analysers.ARCHON004;
 
 internal sealed class NamespaceReferenceCompilationState
 {
-    private readonly ConcurrentDictionary<string, NamespaceRuleSet> _ruleSets = new(StringComparer.Ordinal);
+    private readonly NamespaceRuleSet _rules;
     private readonly Compilation _compilation;
     private readonly Lazy<string[]> _globalNamespaces;
 
-    public NamespaceReferenceCompilationState(Compilation compilation)
+    public NamespaceReferenceCompilationState(Compilation compilation, string? configuredRules)
     {
         _compilation = compilation;
         _globalNamespaces = new(() => GetNamespaces(_compilation.Assembly.GlobalNamespace).ToArray());
+        _rules = NamespaceRuleSet.Parse(configuredRules);
     }
 
-    public NamespaceRuleSet GetRules(AnalyzerConfigOptions options)
-    {
-        if (!options.TryGetValue(ForbiddenNamespaceReferencesAnalyser.EditorConfigKey, out string? value) ||
-            string.IsNullOrWhiteSpace(value))
-        {
-            return NamespaceRuleSet.Empty;
-        }
-
-        return _ruleSets.GetOrAdd(value, NamespaceRuleSet.Parse);
-    }
+    public NamespaceRuleSet GetRules() => _rules;
 
     public string[] GetGlobalNamespaces() => _globalNamespaces.Value;
 

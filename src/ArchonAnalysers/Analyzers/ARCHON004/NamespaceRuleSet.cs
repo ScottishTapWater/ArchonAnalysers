@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace ArchonAnalysers.Analyzers.ARCHON004;
+namespace ArchonAnalysers.Analysers.ARCHON004;
 
 internal sealed class NamespaceRuleSet
 {

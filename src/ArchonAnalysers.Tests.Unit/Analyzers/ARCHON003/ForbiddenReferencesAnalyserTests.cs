@@ -1,4 +1,4 @@
-using ArchonAnalysers.Analyzers.ARCHON003;
+using ArchonAnalysers.Analysers.ARCHON003;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace ArchonAnalysers.Tests.Unit.Analyzers.ARCHON003;
+namespace ArchonAnalysers.Tests.Unit.Analysers.ARCHON003;
 
 public class ForbiddenReferencesAnalyserTests
 {
@@ -34,8 +34,7 @@ public class ForbiddenReferencesAnalyserTests
                                 public class MyClass;
                                 """;
 
-        const string editorConfig = """
-                                    [*.cs]
+        const string settingsFile = """
                                     archon_003.forbidden_references = TestProject->Domain, TestProject->Application
                                     """;
 
@@ -43,7 +42,7 @@ public class ForbiddenReferencesAnalyserTests
 
         // Add an allowed reference (not in forbidden list)
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Infrastructure"));
-        test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+        ArchonSettingsTest.Add(test, settingsFile);
 
         await test.RunAsync(CancellationToken.None);
     }
@@ -56,8 +55,7 @@ public class ForbiddenReferencesAnalyserTests
                                 public class MyClass;
                                 """;
 
-        const string editorConfig = """
-                                    [*.cs]
+        const string settingsFile = """
                                     archon_003.forbidden_references = TestProject->Domain
                                     """;
 
@@ -71,7 +69,7 @@ public class ForbiddenReferencesAnalyserTests
         };
 
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Domain"));
-        test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+        ArchonSettingsTest.Add(test, settingsFile);
 
         await test.RunAsync(CancellationToken.None);
     }
@@ -84,8 +82,7 @@ public class ForbiddenReferencesAnalyserTests
                                 public class MyClass;
                                 """;
 
-        const string editorConfig = """
-                                    [*.cs]
+        const string settingsFile = """
                                     archon_003.forbidden_references = Contracts->Domain
                                     """;
 
@@ -96,7 +93,7 @@ public class ForbiddenReferencesAnalyserTests
         };
 
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Domain"));
-        test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+        ArchonSettingsTest.Add(test, settingsFile);
 
         await test.RunAsync(CancellationToken.None);
     }
@@ -109,8 +106,7 @@ public class ForbiddenReferencesAnalyserTests
                                 public class MyClass;
                                 """;
 
-        const string editorConfig = """
-                                    [*.cs]
+        const string settingsFile = """
                                     archon_003.forbidden_references = TestProject->Domain, TestProject->Application
                                     """;
 
@@ -126,7 +122,7 @@ public class ForbiddenReferencesAnalyserTests
 
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Domain"));
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Application"));
-        test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+        ArchonSettingsTest.Add(test, settingsFile);
 
         await test.RunAsync(CancellationToken.None);
     }
@@ -139,8 +135,7 @@ public class ForbiddenReferencesAnalyserTests
                                 public class MyClass;
                                 """;
 
-        const string editorConfig = """
-                                    [*.cs]
+        const string settingsFile = """
                                     archon_003.forbidden_references = TestProject->domain
                                     """;
 
@@ -155,7 +150,7 @@ public class ForbiddenReferencesAnalyserTests
 
         // Assembly name is "Domain" but config has "domain"
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Domain"));
-        test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+        ArchonSettingsTest.Add(test, settingsFile);
 
         await test.RunAsync(CancellationToken.None);
     }
@@ -168,8 +163,7 @@ public class ForbiddenReferencesAnalyserTests
                                 public class MyClass;
                                 """;
 
-        const string editorConfig = """
-                                    [*.cs]
+        const string settingsFile = """
                                     archon_003.forbidden_references = TestProject->Domain
                                     """;
 
@@ -184,7 +178,7 @@ public class ForbiddenReferencesAnalyserTests
 
         // Source in config is "TEST0" but actual assembly is "test0"
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Domain"));
-        test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+        ArchonSettingsTest.Add(test, settingsFile);
 
         await test.RunAsync(CancellationToken.None);
     }
@@ -197,8 +191,7 @@ public class ForbiddenReferencesAnalyserTests
                                 public class MyClass;
                                 """;
 
-        const string editorConfig = """
-                                    [*.cs]
+        const string settingsFile = """
                                     archon_003.forbidden_references = TestProject->Domain.dll
                                     """;
 
@@ -212,7 +205,7 @@ public class ForbiddenReferencesAnalyserTests
         };
 
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Domain"));
-        test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+        ArchonSettingsTest.Add(test, settingsFile);
 
         await test.RunAsync(CancellationToken.None);
     }
@@ -225,8 +218,7 @@ public class ForbiddenReferencesAnalyserTests
                                 public class MyClass;
                                 """;
 
-        const string editorConfig = """
-                                    [*.cs]
+        const string settingsFile = """
                                     archon_003.forbidden_references = TestProject->Domain, TestProject->Application
                                     """;
 
@@ -241,7 +233,7 @@ public class ForbiddenReferencesAnalyserTests
 
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Domain")); // Forbidden
         test.TestState.AdditionalReferences.Add(CreateMockAssembly("Infrastructure")); // Allowed
-        test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+        ArchonSettingsTest.Add(test, settingsFile);
 
         await test.RunAsync(CancellationToken.None);
     }

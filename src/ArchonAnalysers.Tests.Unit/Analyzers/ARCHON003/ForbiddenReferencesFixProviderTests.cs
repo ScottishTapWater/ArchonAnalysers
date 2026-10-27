@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Xunit;
 
-namespace ArchonAnalysers.Tests.Unit.Analyzers.ARCHON003;
+namespace ArchonAnalysers.Tests.Unit.Analysers.ARCHON003;
 
 public class ForbiddenReferencesFixProviderTests : IDisposable
 {

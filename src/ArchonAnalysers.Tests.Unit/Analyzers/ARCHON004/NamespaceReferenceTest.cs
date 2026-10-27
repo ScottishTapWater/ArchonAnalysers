@@ -1,11 +1,11 @@
-using ArchonAnalysers.Analyzers.ARCHON004;
+using ArchonAnalysers.Analysers.ARCHON004;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Testing;
 
-namespace ArchonAnalysers.Tests.Unit.Analyzers.ARCHON004;
+namespace ArchonAnalysers.Tests.Unit.Analysers.ARCHON004;
 
 internal static class NamespaceReferenceTest
 {
@@ -22,14 +22,9 @@ internal static class NamespaceReferenceTest
 
         if (configuredRules != null)
         {
-            test.TestState.AnalyzerConfigFiles.Add((
-                "/.editorconfig",
-                $"""
-                root = true
-
-                [*.cs]
+            ArchonSettingsTest.Add(test, $"""
                 archon_004.forbidden_namespace_references = {configuredRules}
-                """));
+                """);
         }
 
         return test;

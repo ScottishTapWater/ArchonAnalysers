@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace ArchonAnalysers.Analyzers.ARCHON004;
+namespace ArchonAnalysers.Analysers.ARCHON004;
 
 internal sealed class NamespaceReferenceWalker : CSharpSyntaxWalker
 {

@@ -1,9 +1,9 @@
-using ArchonAnalysers.Analyzers.ARCHON001;
+using ArchonAnalysers.Analysers.ARCHON001;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace ArchonAnalysers.Tests.Unit.Analyzers.ARCHON001;
+namespace ArchonAnalysers.Tests.Unit.Analysers.ARCHON001;
 
 public class InternalsAreInternalAnalyserConfigurationTests
 {
@@ -15,8 +15,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 		                          {|{{InternalsAreInternalAnalyser.DiagnosticId}}:public|} class MyClass;
 		                          """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_001.internal_namespace_slugs = Private
 		                            """;
 
@@ -25,7 +24,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -37,8 +36,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 		                        public class MyClass;
 		                        """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_001.internal_namespace_slugs = Private
 		                            """;
 
@@ -47,7 +45,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -71,8 +69,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 		                          }
 		                          """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_001.internal_namespace_slugs = Private, Hidden, Secret
 		                            """;
 
@@ -81,7 +78,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -93,8 +90,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 		                        public class MyClass;
 		                        """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_001.internal_namespace_slugs = Private, Hidden
 		                            """;
 
@@ -103,7 +99,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -115,7 +111,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 		                          {|{{InternalsAreInternalAnalyser.DiagnosticId}}:public|} class MyClass;
 		                          """;
 
-		// No editorconfig file added - should use default "Internal"
+		// No settings file added - should use default "Internal"
 		CSharpAnalyzerTest<InternalsAreInternalAnalyser, DefaultVerifier> test = new()
 		{
 			TestCode = testCode
@@ -132,8 +128,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 		                          {|{{InternalsAreInternalAnalyser.DiagnosticId}}:public|} class MyClass;
 		                          """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_001.internal_namespace_slugs =
 		                            """;
 
@@ -142,7 +137,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -161,8 +156,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 		                          }
 		                          """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_001.internal_namespace_slugs = Private ,  Hidden  ,   Internal
 		                            """;
 
@@ -171,7 +165,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -183,8 +177,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 		                          {|{{InternalsAreInternalAnalyser.DiagnosticId}}:public|} class MyClass;
 		                          """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_001.internal_namespace_slugs = Internal.Impl
 		                            """;
 
@@ -193,7 +186,7 @@ public class InternalsAreInternalAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 }

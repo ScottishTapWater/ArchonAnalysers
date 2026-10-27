@@ -1,12 +1,12 @@
-using ArchonAnalysers.Analyzers.ARCHON004;
+using ArchonAnalysers.Analysers.ARCHON004;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-using static ArchonAnalysers.Tests.Unit.Analyzers.ARCHON004.NamespaceReferenceTest;
+using static ArchonAnalysers.Tests.Unit.Analysers.ARCHON004.NamespaceReferenceTest;
 
-namespace ArchonAnalysers.Tests.Unit.Analyzers.ARCHON004;
+namespace ArchonAnalysers.Tests.Unit.Analysers.ARCHON004;
 
 public class ForbiddenNamespaceReferencesAnalyserConfigurationTests
 {

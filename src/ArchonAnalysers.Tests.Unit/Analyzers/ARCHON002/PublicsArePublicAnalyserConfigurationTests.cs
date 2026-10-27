@@ -1,9 +1,9 @@
-using ArchonAnalysers.Analyzers.ARCHON002;
+using ArchonAnalysers.Analysers.ARCHON002;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 
-namespace ArchonAnalysers.Tests.Unit.Analyzers.ARCHON002;
+namespace ArchonAnalysers.Tests.Unit.Analysers.ARCHON002;
 
 public class PublicsArePublicAnalyserConfigurationTests
 {
@@ -15,8 +15,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 		                          {|{{PublicsArePublicAnalyser.DiagnosticId}}:internal|} class MyClass;
 		                          """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_002.public_namespace_slugs = Api
 		                            """;
 
@@ -25,7 +24,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -37,8 +36,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 		                        internal class MyClass;
 		                        """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_002.public_namespace_slugs = Api
 		                            """;
 
@@ -47,7 +45,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -66,8 +64,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 		                          }
 		                          """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_002.public_namespace_slugs = Api, Exposed, Public
 		                            """;
 
@@ -76,7 +73,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -88,8 +85,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 		                        internal class MyClass;
 		                        """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_002.public_namespace_slugs = Api, Exposed
 		                            """;
 
@@ -98,7 +94,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -110,7 +106,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 		                          {|{{PublicsArePublicAnalyser.DiagnosticId}}:internal|} class MyClass;
 		                          """;
 
-		// No editorconfig file added - should use default "Public"
+		// No settings file added - should use default "Public"
 		CSharpAnalyzerTest<PublicsArePublicAnalyser, DefaultVerifier> test = new()
 		{
 			TestCode = testCode
@@ -127,8 +123,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 		                          {|{{PublicsArePublicAnalyser.DiagnosticId}}:internal|} class MyClass;
 		                          """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_002.public_namespace_slugs =
 		                            """;
 
@@ -137,7 +132,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 
@@ -149,8 +144,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 		                          {|{{PublicsArePublicAnalyser.DiagnosticId}}:internal|} class MyClass;
 		                          """;
 
-		const string editorConfig = """
-		                            [*.cs]
+		const string settingsFile = """
 		                            archon_002.public_namespace_slugs =  Api  ,  Public
 		                            """;
 
@@ -159,7 +153,7 @@ public class PublicsArePublicAnalyserConfigurationTests
 			TestCode = testCode
 		};
 
-		test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+		ArchonSettingsTest.Add(test, settingsFile);
 		await test.RunAsync(CancellationToken.None);
 	}
 }

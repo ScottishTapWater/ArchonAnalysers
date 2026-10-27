@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace ArchonAnalysers.Analyzers.ARCHON004;
+namespace ArchonAnalysers.Analysers.ARCHON004;
 
 internal sealed class NamespaceReferenceDiagnosticReporter
 {

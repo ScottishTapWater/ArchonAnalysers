@@ -2,13 +2,13 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace ArchonAnalysers.Analyzers.ARCHON004;
+namespace ArchonAnalysers.Analysers.ARCHON004;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class ForbiddenNamespaceReferencesAnalyser : DiagnosticAnalyzer
 {
     public const string DiagnosticId = "ARCHON004";
-    public const string EditorConfigKey = "archon_004.forbidden_namespace_references";
+    public const string SettingsKey = "archon_004.forbidden_namespace_references";
 
     internal static readonly DiagnosticDescriptor Rule = new(
         DiagnosticId,
@@ -29,7 +29,8 @@ public sealed class ForbiddenNamespaceReferencesAnalyser : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(startContext =>
         {
-            NamespaceReferenceCompilationState state = new(startContext.Compilation);
+            ArchonSettings settings = ArchonSettings.Read(startContext.Options, startContext.CancellationToken);
+            NamespaceReferenceCompilationState state = new(startContext.Compilation, settings.GetValue(SettingsKey));
             startContext.RegisterSemanticModelAction(modelContext => AnalyzeSemanticModel(modelContext, state));
         });
     }
@@ -39,8 +40,7 @@ public sealed class ForbiddenNamespaceReferencesAnalyser : DiagnosticAnalyzer
         NamespaceReferenceCompilationState state)
     {
         SyntaxTree tree = context.SemanticModel.SyntaxTree;
-        NamespaceRuleSet rules = state.GetRules(
-            context.Options.AnalyzerConfigOptionsProvider.GetOptions(tree));
+        NamespaceRuleSet rules = state.GetRules();
         if (rules.IsEmpty)
         {
             return;
