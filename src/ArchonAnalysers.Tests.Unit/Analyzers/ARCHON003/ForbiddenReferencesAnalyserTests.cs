@@ -238,6 +238,62 @@ public class ForbiddenReferencesAnalyserTests
         await test.RunAsync(CancellationToken.None);
     }
 
+    [Theory]
+    [InlineData("GoSim.Motors.Core.Features.*", "GoSim.Motors.Core.Features.Winding", true)]
+    [InlineData("GoSim.Motors.Core.Features.*", "GoSim.Motors.Core.Features.Winding.Contracts", true)]
+    [InlineData("gosim.motors.core.features.*", "GoSim.Motors.Core.Features.Winding", true)]
+    [InlineData("GoSim.Motors.Core.Features.*.dll", "GoSim.Motors.Core.Features.Winding", true)]
+    [InlineData("GoSim.Motors.Core.Features.*", "GoSim.Motors.Core.Features", false)]
+    [InlineData("GoSim.Motors.Core.Features.*", "GoSim.Motors.Core.FeaturesExtra.Winding", false)]
+    [InlineData("GoSim.Motors.Core.Features.*", "Other.GoSim.Motors.Core.Features.Winding", false)]
+    [InlineData("GoSim.Motors.Core.Features.*", "GoSimXMotors.Core.Features.Winding", false)]
+    [InlineData("*.Features.Winding", "GoSim.Motors.Core.Features.Winding", true)]
+    [InlineData("*.Features.Winding", "GoSim.Motors.Core.Features.WindingExtra", false)]
+    [InlineData("GoSim.*.Features.*", "GoSim.Motors.Core.Features.Winding", true)]
+    [InlineData("GoSim.*.Features.*", "GoSim.Motors.Core.Other.Winding", false)]
+    [InlineData("GoSim.Motors.Core.Features*", "GoSim.Motors.Core.Features", true)]
+    public async Task WildcardTarget_MatchesAssemblyName(string target, string assemblyName, bool forbidden)
+    {
+        CSharpAnalyzerTest<ForbiddenReferencesAnalyser, DefaultVerifier> test = new()
+        {
+            TestCode = "public class MyClass;"
+        };
+
+        if (forbidden)
+        {
+            test.ExpectedDiagnostics.Add(
+                new DiagnosticResult(ForbiddenReferencesAnalyser.DiagnosticId, DiagnosticSeverity.Error)
+                    .WithArguments("TestProject", assemblyName));
+        }
+
+        test.TestState.AdditionalReferences.Add(CreateMockAssembly(assemblyName));
+        ArchonSettingsTest.Add(test, $"archon_003.forbidden_references = TestProject->{target}");
+
+        await test.RunAsync(CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task OverlappingWildcardAndExactTargets_ReportOneDiagnosticPerReference()
+    {
+        const string forbiddenAssembly = "GoSim.Motors.Core.Features.Winding";
+        CSharpAnalyzerTest<ForbiddenReferencesAnalyser, DefaultVerifier> test = new()
+        {
+            TestCode = "public class MyClass;",
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult(ForbiddenReferencesAnalyser.DiagnosticId, DiagnosticSeverity.Error)
+                    .WithArguments("TestProject", forbiddenAssembly)
+            }
+        };
+
+        test.TestState.AdditionalReferences.Add(CreateMockAssembly(forbiddenAssembly));
+        test.TestState.AdditionalReferences.Add(CreateMockAssembly("GoSim.Motors.Core.Contracts"));
+        ArchonSettingsTest.Add(test,
+            $"archon_003.forbidden_references = TestProject->GoSim.Motors.Core.Features.*, TestProject->{forbiddenAssembly}");
+
+        await test.RunAsync(CancellationToken.None);
+    }
+
     private static MetadataReference CreateMockAssembly(string name, string code = "")
     {
         // Provide a minimal valid assembly if no code is specified
