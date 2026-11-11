@@ -138,6 +138,15 @@ This enforces:
 archon_003.forbidden_references = Source->Target, AnotherSource->AnotherTarget
 ```
 
+Targets support `*`, which matches zero or more characters, including dots. Other characters match literally. For example:
+
+```ini
+archon_003.forbidden_references = GoSim.Motors.Core->GoSim.Motors.Core.Features.*
+```
+
+This forbids `GoSim.Motors.Core` from referencing `GoSim.Motors.Core.Features.Winding` or `GoSim.Motors.Core.Features.Winding.Contracts`.
+The pattern does not match `GoSim.Motors.Core.Features` itself. Source assembly names remain exact matches.
+
 **Notes:**
 - Assembly names are matched without version, culture, or public key token
 - Matching is case-insensitive for both source and target

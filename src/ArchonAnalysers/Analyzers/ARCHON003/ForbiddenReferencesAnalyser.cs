@@ -15,12 +15,21 @@ public class ForbiddenReferencesAnalyser : DiagnosticAnalyzer
     {
         public string Source { get; }
         public string Target { get; }
+        private readonly Regex? _targetPattern;
 
         public ForbiddenRule(string source, string target)
         {
             Source = source;
             Target = target;
+            _targetPattern = target.Contains('*')
+                ? new Regex(@"\A" + Regex.Escape(target).Replace(@"\*", ".*") + @"\z",
+                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                : null;
         }
+
+        public bool MatchesTarget(string assemblyName) =>
+            _targetPattern?.IsMatch(assemblyName)
+            ?? string.Equals(Target, assemblyName, StringComparison.OrdinalIgnoreCase);
     }
 
     private static readonly LocalizableString Title = "Project contains forbidden assembly reference";
@@ -77,7 +86,7 @@ public class ForbiddenReferencesAnalyser : DiagnosticAnalyzer
         foreach (MetadataReference reference in context.Compilation.References)
         {
             string? assemblyName = GetAssemblyName(reference, context.Compilation);
-            if (assemblyName == null || !applicableRules.Any(rule => string.Equals(rule.Target, assemblyName, StringComparison.OrdinalIgnoreCase)))
+            if (assemblyName == null || !applicableRules.Any(rule => rule.MatchesTarget(assemblyName)))
             {
                 continue;
             }
